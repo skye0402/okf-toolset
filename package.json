@@ -1,0 +1,74 @@
+{
+  "name": "okf-toolset",
+  "version": "0.1.0",
+  "description": "Filesystem-first Open Knowledge Format (OKF) v0.1 toolkit with embeddings, search, MCP, refiner, and Git helpers.",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./fs": {
+      "types": "./dist/fs/index.d.ts",
+      "default": "./dist/fs/index.js"
+    },
+    "./embeddings": {
+      "types": "./dist/embeddings/index.d.ts",
+      "default": "./dist/embeddings/index.js"
+    },
+    "./search": {
+      "types": "./dist/search/index.d.ts",
+      "default": "./dist/search/index.js"
+    },
+    "./mcp": {
+      "types": "./dist/mcp/index.d.ts",
+      "default": "./dist/mcp/index.js"
+    },
+    "./refiner": {
+      "types": "./dist/refiner/index.d.ts",
+      "default": "./dist/refiner/index.js"
+    },
+    "./git": {
+      "types": "./dist/git/index.d.ts",
+      "default": "./dist/git/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm run typecheck && pnpm run test && pnpm run build && publint && attw --pack . --profile esm-only"
+  },
+  "dependencies": {
+    "yaml": "^2.8.0",
+    "zod": "^3.25.76"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@modelcontextprotocol/sdk": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.4",
+    "@modelcontextprotocol/sdk": "^1.15.1",
+    "@types/node": "^22.15.34",
+    "publint": "^0.3.12",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
