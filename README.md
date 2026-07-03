@@ -6,7 +6,25 @@ TypeScript toolkit for Open Knowledge Format (OKF) v0.1 bundles. The current OKF
 
 ## Status
 
-Early v0.1 implementation. Intended for Node.js/server-side use with ESM. The package is currently marked `private` until naming/scope and publishing details are finalized.
+Published as [`okf-toolset`](https://www.npmjs.com/package/okf-toolset). Early v0.1 implementation, intended for Node.js/server-side use with ESM.
+
+## Install
+
+```bash
+npm install okf-toolset
+```
+
+`okf-toolset` is ESM-only and requires Node.js 20 or newer.
+
+```ts
+import { parseConcept, DefaultOkfToolbox } from 'okf-toolset';
+import { FileOkfStore } from 'okf-toolset/fs';
+import { rebuildEmbeddingCache } from 'okf-toolset/embeddings';
+import { OkfSearchEngine } from 'okf-toolset/search';
+import { registerOkfTools } from 'okf-toolset/mcp';
+import { OkfRefiner } from 'okf-toolset/refiner';
+import { OkfGitHelper } from 'okf-toolset/git';
+```
 
 ## Design
 
@@ -62,6 +80,54 @@ const engine = new OkfSearchEngine(store);
 const toolbox = new DefaultOkfToolbox(engine);
 
 console.log(await toolbox.search('sales order'));
+```
+
+## Embedding example
+
+The library does not ship cloud-provider SDKs. Provide your own embedding adapter and keep the generated cache as rebuildable state.
+
+```ts
+import { FileOkfStore } from 'okf-toolset/fs';
+import { rebuildEmbeddingCache, openEmbeddingIndex } from 'okf-toolset/embeddings';
+import { OkfSearchEngine } from 'okf-toolset/search';
+
+const provider = {
+  modelId: 'my-embedding-model',
+  dimensions: 1536,
+  async embedTexts(texts: string[]) {
+    // Call OpenAI, SAP GenAI Hub, Vertex, a local model, etc.
+    return texts.map(() => new Array(1536).fill(0));
+  },
+};
+
+const store = new FileOkfStore('./knowledge');
+await rebuildEmbeddingCache(await store.scanBundle(), provider, {
+  cachePath: '.okf-cache/embeddings.jsonl',
+  incremental: true,
+});
+
+const vectorIndex = await openEmbeddingIndex('.okf-cache/embeddings.jsonl');
+const engine = new OkfSearchEngine(store, { embeddingProvider: provider, vectorIndex });
+
+console.log(await engine.search('sales order playbook', { mode: 'hybrid' }));
+```
+
+## MCP example
+
+`okf-toolset/mcp` registers tools on a host-owned MCP server. The host still chooses stdio, Streamable HTTP, auth, and deployment.
+
+```ts
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { DefaultOkfToolbox } from 'okf-toolset';
+import { FileOkfStore } from 'okf-toolset/fs';
+import { registerOkfTools } from 'okf-toolset/mcp';
+import { OkfSearchEngine } from 'okf-toolset/search';
+
+const server = new McpServer({ name: 'okf', version: '0.1.0' });
+const store = new FileOkfStore('./knowledge');
+const toolbox = new DefaultOkfToolbox(new OkfSearchEngine(store));
+
+registerOkfTools(server, toolbox, { store });
 ```
 
 ## Development
