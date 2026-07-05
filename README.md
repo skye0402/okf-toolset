@@ -140,6 +140,53 @@ pnpm run build
 pnpm run check
 ```
 
+## Optional LLM/MCP e2e test
+
+The normal test suite is offline. There is also an opt-in e2e smoke test that exercises an LLM through an in-process MCP-style tool registry:
+
+1. The LLM reads source text and returns `okf_create_draft` tool calls.
+2. Drafts are approved into OKF concepts.
+3. `okf_context` retrieves the new knowledge for a second LLM answer.
+4. An adversarial prompt attempts path traversal / `drafts/` writes and verifies `executeSafely()` rejects it.
+
+SAP GenAI Hub is the preferred provider:
+
+```bash
+cp .env.example .env.local
+# edit .env.local, then run:
+pnpm run test:e2e:llm
+```
+
+Equivalent inline SAP GenAI Hub configuration:
+
+```bash
+OKF_LLM_PROVIDER=sap-genai-hub \
+OKF_LLM_BASE_URL=https://api.ai.prod.<region>.aws.ml.hana.ondemand.com \
+OKF_LLM_TOKEN_URL='https://.../oauth/token' \
+OKF_LLM_CLIENT_ID='<client-id>' \
+OKF_LLM_CLIENT_SECRET='<client-secret>' \
+OKF_LLM_MODEL='<deployment-id>' \
+pnpm run test:e2e:llm
+```
+
+If you already have a bearer token, use `OKF_LLM_API_KEY='<bearer-token>'` instead of `OKF_LLM_TOKEN_URL`, `OKF_LLM_CLIENT_ID`, and `OKF_LLM_CLIENT_SECRET`. If your OAuth server requires a scope, set `OKF_LLM_OAUTH_SCOPE`.
+
+`OKF_LLM_MODEL` may be a SAP GenAI Hub deployment ID, deployment URL, or model name such as `gpt-5.5`. If it is empty, or if it looks like a model name and `OKF_LLM_RESOURCE_GROUP` is set, the e2e test calls `GET /lm/deployments` and selects the first matching HTTP deployment. Optional filters are `OKF_LLM_MODEL_NAME`, `OKF_LLM_SCENARIO_ID`, `OKF_LLM_CONFIGURATION_ID`, `OKF_LLM_EXECUTABLE_IDS` as a comma-separated list, `OKF_LLM_DEPLOYMENT_STATUS`, and `OKF_LLM_DEPLOYMENT_TOP`. Model-name matching uses the deployment payload model name, or `name:version`, for example `gemini-3.5-flash`, `gemini-3.5-flash:001`, or `gpt-5.5`.
+
+LiteLLM, or any OpenAI-compatible `/chat/completions` gateway, can be used as fallback:
+
+```bash
+OKF_LLM_PROVIDER=litellm \
+OKF_LLM_BASE_URL=http://localhost:4000/v1 \
+OKF_LLM_API_KEY='<api-key>' \
+OKF_LLM_MODEL='<model-name>' \
+pnpm run test:e2e:llm
+```
+
+The e2e test is skipped unless `OKF_LLM_E2E=true`; the package script sets that flag automatically. Do not commit real tokens or deployment IDs.
+
+`OKF_LLM_TEMPERATURE` is optional and omitted by default because some SAP-hosted models, including GPT-5.5 deployments, reject non-default temperature values.
+
 ## Migration from the Python prototype
 
 - `memory.py` maps to core, filesystem store, and drafts.

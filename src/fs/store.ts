@@ -129,16 +129,16 @@ export class FileOkfStore implements OkfStore {
       type: 'Memory Draft',
       title: input.title,
       description: input.description ?? '',
-      tags: input.tags ?? ['okf', 'draft'],
+      tags: input.tags ?? ['computer-use', 'draft'],
       timestamp: new Date().toISOString(),
       frontmatter: {
         type: 'Memory Draft',
         title: input.title,
         description: input.description ?? '',
-        tags: input.tags ?? ['okf', 'draft'],
+        tags: input.tags ?? ['computer-use', 'draft'],
         timestamp: new Date().toISOString(),
         status: 'pending',
-        proposed_type: input.proposedType ?? 'Reference',
+        proposed_type: input.proposedType ?? 'Navigation Lesson',
         ...(input.sourceRun ? { source_run: input.sourceRun } : {}),
       },
       body: input.body,
@@ -163,10 +163,10 @@ export class FileOkfStore implements OkfStore {
       ...draft,
       conceptId: targetId,
       path: targetPath,
-      type: String(draft.frontmatter.proposed_type ?? 'Reference'),
+      type: String(draft.frontmatter.proposed_type ?? 'Navigation Lesson'),
       frontmatter: {
         ...draft.frontmatter,
-        type: String(draft.frontmatter.proposed_type ?? 'Reference'),
+        type: String(draft.frontmatter.proposed_type ?? 'Navigation Lesson'),
         status: 'approved',
       },
     };
@@ -251,7 +251,7 @@ function slugify(value: string): string {
 }
 
 function defaultTargetConceptId(draft: OkfConcept): string {
-  const proposedType = String(draft.frontmatter.proposed_type ?? 'Reference');
+  const proposedType = String(draft.frontmatter.proposed_type ?? 'Navigation Lesson');
   const folderByType: Record<string, string> = {
     'Task Playbook': 'playbooks',
     'Navigation Lesson': 'navigation',

@@ -31,6 +31,27 @@ describe('FileOkfStore', () => {
     expect((await store.scanBundle()).some((concept) => concept.conceptId.includes('drafts/rejected') && concept.frontmatter.status === 'rejected')).toBe(true);
   });
 
+  it('uses Python-compatible draft defaults and approval routing', async () => {
+    const dir = await tempBundle();
+    const store = new FileOkfStore(dir);
+    const draft = await store.createDraft({ title: 'Wait After Launch', body: 'Wait after app launch.' });
+    expect(draft.tags).toEqual(['computer-use', 'draft']);
+    expect(draft.frontmatter.proposed_type).toBe('Navigation Lesson');
+    const approved = await store.approveDraft(draft.conceptId);
+    expect(approved.conceptId).toBe('navigation/wait-after-launch');
+    expect(approved.type).toBe('Navigation Lesson');
+    expect(approved.frontmatter.status).toBe('approved');
+  });
+
+  it('routes known failure drafts to failures', async () => {
+    const dir = await tempBundle();
+    const store = new FileOkfStore(dir);
+    const draft = await store.createDraft({ title: 'Failed run abc123', body: 'Failure evidence.', proposedType: 'Known Failure' });
+    const approved = await store.approveDraft(draft.conceptId);
+    expect(approved.conceptId).toBe('failures/failed-run-abc123');
+    expect(approved.type).toBe('Known Failure');
+  });
+
   it('rejects accidental overwrites and exposes index/log helpers', async () => {
     const dir = await tempBundle();
     const store = new FileOkfStore(dir);

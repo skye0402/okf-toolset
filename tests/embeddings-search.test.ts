@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mkdtemp } from 'node:fs/promises';
+import { mkdtemp, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { FileOkfStore } from '../src/fs/index.js';
@@ -56,6 +56,15 @@ describe('embeddings and search', () => {
     const hybrid = await engine.search('sales customer', { mode: 'hybrid' });
     expect(hybrid[0]?.scores.embedding).toBeTypeOf('number');
     expect(hybrid[0]?.scores.combined).toBeGreaterThan(0);
+  });
+
+  it('matches Python memory context empty message and startup policy budget', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'okf-search-'));
+    await writeFile(path.join(dir, 'policy.md'), `---\ntype: Agent Policy\ntitle: Long Policy\nstartup_policy: required\n---\n${'important '.repeat(300)}\n`, 'utf8');
+    const engine = new OkfSearchEngine(new FileOkfStore(dir));
+    expect((await engine.context('nothing matches')).context).toBe('No relevant OKF memory was found for this task.');
+    const context = (await engine.context('important')).context;
+    expect(context.length).toBeGreaterThan(1000);
   });
 
   it('normalizes vector pathPrefix filters', async () => {

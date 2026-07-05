@@ -31,6 +31,7 @@ describe('MCP helper', () => {
     expect((await server.tools.get('okf_validate')({ strict: true })).errors).toEqual([]);
     const draft = await server.tools.get('okf_create_draft')({ title: 'MCP Draft', body: 'Draft body' });
     expect(draft.conceptId).toContain('drafts/');
+    expect(await server.tools.get('okf_get')({ concept_id: draft.conceptId })).toBeNull();
     expect((await server.tools.get('okf_list_drafts')({})).drafts.length).toBe(1);
     const rejected = await server.tools.get('okf_reject_draft')({ draft_name: draft.conceptId });
     expect(rejected.frontmatter.status).toBe('rejected');

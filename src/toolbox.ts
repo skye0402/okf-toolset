@@ -1,5 +1,5 @@
 import type { OkfConcept, OkfSearchResult, OkfToolbox, OkfValidationError, SearchOptions, ValidationOptions } from './core/types.js';
-import { normalizeConceptId } from './core/paths.js';
+import { isDraftPath, normalizeConceptId } from './core/paths.js';
 import { OkfSearchEngine } from './search/index.js';
 
 export class DefaultOkfToolbox implements OkfToolbox {
@@ -14,7 +14,9 @@ export class DefaultOkfToolbox implements OkfToolbox {
   }
 
   get(conceptId: string): Promise<OkfConcept | null> {
-    return this.searchEngine.store.getConcept(normalizeConceptId(conceptId));
+    const normalized = normalizeConceptId(conceptId);
+    if (isDraftPath(normalized)) return Promise.resolve(null);
+    return this.searchEngine.store.getConcept(normalized);
   }
 
   validate(options?: ValidationOptions): Promise<OkfValidationError[]> {

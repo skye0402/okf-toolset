@@ -33,7 +33,7 @@ export class OkfSearchEngine {
 
   async context(query: string, options: SearchOptions = {}): Promise<{ context: string; concepts: OkfSearchResult[] }> {
     const concepts = await this.search(query, options);
-    if (!concepts.length) return { context: 'No relevant OKF memory was found for this query.', concepts };
+    if (!concepts.length) return { context: 'No relevant OKF memory was found for this task.', concepts };
     const context = concepts.map((result) => {
       const title = result.title ?? result.conceptId;
       const snippet = result.snippet ? `\n  ${result.snippet}` : '';
@@ -111,11 +111,13 @@ function recencyBoost(concept: OkfConcept): number {
 }
 
 function makeSnippet(concept: OkfConcept, query: string): string {
+  const startupPolicy = String(concept.frontmatter.startup_policy ?? '').toLowerCase();
+  const maxLength = ['true', 'required', 'always'].includes(startupPolicy) ? 2200 : 240;
   const tokens = [...tokenize(query)];
   const normalized = concept.body.replace(/\s+/g, ' ').trim();
   if (!normalized) return concept.description ?? '';
   const lower = normalized.toLowerCase();
   const hit = tokens.map((token) => lower.indexOf(token)).filter((index) => index >= 0).sort((a, b) => a - b)[0] ?? 0;
   const start = Math.max(0, hit - 80);
-  return normalized.slice(start, start + 240) + (normalized.length > start + 240 ? '…' : '');
+  return normalized.slice(start, start + maxLength) + (normalized.length > start + maxLength ? '…' : '');
 }

@@ -4,3 +4,7 @@ coverage/
 .okf-cache/
 *.tsbuildinfo
 .DS_Store
+.env
+.env.local
+.env.*.local
+!.env.example
